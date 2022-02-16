@@ -1,0 +1,6 @@
+bookingid,name,provider,source,destination,cartype,price,status
+1,RAHUL,UBER,Mumbai,Pune,,5000.00,TO_BOOK
+2,Rohit,UBER,Mumbai,Pune,,5000.00,TO_BOOK
+3,Sameer,UBER,Mumbai,Pune,,5000.00,TO_BOOK
+4,Arjun,UBER,Mumbai,Pune,,5000.00,TO_BOOK
+5,Sneha,UBER,Mumbai,Pune,,5000.00,TO_BOOK

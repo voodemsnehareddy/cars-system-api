@@ -1,0 +1,5 @@
+bookingid,name,provider,source,destination,cartype,price,status
+0,Shyam,OLA,Bengaluru,Pune,Micro,4500.00,CONFIRMED
+1,Shyam,UBER,Bengaluru,Pune,Micro,4500.00,CONFIRMED
+0,Rahul,OLA,Bengaluru,Mumbai,Micro,4500.00,CONFIRMED
+1,Rahul,UBER,Bengaluru,Mumbai,Micro,4500.00,CONFIRMED

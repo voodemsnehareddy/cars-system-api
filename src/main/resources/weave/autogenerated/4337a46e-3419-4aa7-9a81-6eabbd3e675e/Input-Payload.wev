@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_4337a46e_3419_4aa7_9a81_6eabbd3e675e_Input_Payload = {
+  carType: "Mini" | "Micro", 
+  price: Number, 
+  name: String, 
+  destination: "Bengaluru" | "Pune" | "Nashik" | "Mumbai", 
+  description: "OLA" | "UBER", 
+  source: "Bengaluru" | "Pune" | "Nashik" | "Mumbai", 
+  bookingId?: Number, 
+  status: String, 
+  _?: Any
+}
+

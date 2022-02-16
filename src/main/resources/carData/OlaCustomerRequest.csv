@@ -1,0 +1,6 @@
+bookingid,name,provider,source,destination,cartype,price,status
+6,Sneha,OLA,Mumbai,Pune,,5000.00,TO_BOOK
+7,Rahul,OLA,Mumbai,Pune,,5000.00,TO_BOOK
+8,Rohit,OLA,Mumbai,Pune,,5000.00,TO_BOOK
+9,Bhim,OLA,Mumbai,Pune,,5000.00,TO_BOOK
+10,Prakash,OLA,Mumbai,Pune,,5000.00,TO_BOOK

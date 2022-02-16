@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="getProviderCarDetailsFlow"
+		doc:id="279fb010-d9d9-4f7f-9dc0-7cf1aa1d8fbd">
+		<scheduler doc:name="ProviderScheduler"
+			doc:id="06dd29f3-f91e-47eb-9e85-8821854022e2">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="HOURS" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Init Logger" doc:id="37fec4cd-86ca-41af-a80a-6811728ec051" message='#["getProviderCarDetailsFlow Flow Started"]'/>
+		<file:read doc:name="Read Car Details from Provider File"
+			doc:id="e5842194-e028-444c-a34d-80106a0bb991"
+			config-ref="File_Config" path="GeneratedFiles/getProviderCarDetails.csv" />
+		<logger level="INFO" doc:name="Response Data" doc:id="6ad49ff2-ee37-431a-b122-913b8e32ce10" message="#[payload]"/>
+		<logger level="INFO" doc:name="End Logger" doc:id="09dc05ef-c70e-43d4-92b2-fc0261287a07" message='#["getProviderCarDetailsFlow Flow Finished"]'/>
+	
+	</flow>
+	<flow name="getCustomerCarDetailsFlow"
+		doc:id="f919eeca-93ae-4b93-8966-68c3b3a740d8">
+		<scheduler doc:name="CustomerScheduler"
+			doc:id="74bfa8f2-44e0-44c7-ae3b-85b4ff1d8782">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="HOURS" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Init Logger" doc:id="6823fd7a-2884-4b69-9062-37c4105948d7" message='#["getCustomerCarDetailsFlow Flow Started"]'/>
+		<file:read doc:name="Read Car Details from Customer File"
+			doc:id="328d39b1-21c3-4613-a06f-b9a02a35ccdb"
+			config-ref="File_Config" path="GeneratedFiles/getCustomerCarDetails.csv" />
+		<logger level="INFO" doc:name="Response Data" doc:id="34c4facb-a990-46f9-b820-1c1dc249c6ae" message="#[payload]"/>
+		<logger level="INFO" doc:name="End Logger" doc:id="e5dafe0f-f7b5-43e4-b5e2-a7f3e7aa357a" message='#["getCustomerCarDetailsFlow Flow Finished"]'/>
+	
+	</flow>
+	<flow name="postCustomerCar" doc:id="4337a46e-3419-4aa7-9a81-6eabbd3e675e" >
+		<logger level="INFO" doc:name="Init Logger" doc:id="c25372f5-5fd3-424a-888a-651740c51829" message='#["postCustomerCar Flow Started"]'/>
+		<set-variable value='#[payload.description default ""]' doc:name="providerVariable" doc:id="86483438-1bff-4214-b6b4-e8de4cb2eb7d" variableName="provider" />
+		<os:retrieve doc:name="lastCustomerId" doc:id="f23aa644-2c59-4d21-8918-4aa608c4608c" key="lastCustomerId" target="lastCustomerId">
+			<os:default-value ><![CDATA[1]]></os:default-value>
+		</os:retrieve>
+		<ee:transform doc:name="Setting Customer  Booking Id" doc:id="2c28bd8a-03a7-49d1-a840-ed9095ecae86" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+type currency=String{format: '.00'}
+---
+{
+	"bookingId":vars.lastCustomerId,
+	"name": payload.name,
+	"description": payload.description,
+	"source":payload.source,
+	"destination ":payload.destination,
+	"carType":payload.cartype,
+	"price":payload.price as Number as currency,
+	"status":payload.status
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Check Customer" doc:id="1ef6b15b-95e8-4a45-9fe4-295cd5f43959" >
+			<when expression='#[vars.provider=="OLA"]'>
+				<file:write doc:name="Write to Ola Customer File" doc:id="8b6c683e-0139-4c06-98d5-ea72d9a9c7dc" config-ref="File_Config" path='carData/OlaCustomerRequest.csv' mode="APPEND">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</when>
+			<when expression='#[vars.provider=="UBER"]'>
+				<file:write doc:name="Write to Uber Customer File" doc:id="d512a5d8-1e21-457a-90a3-0c764de55a7e" config-ref="File_Config" path="carData/UberCustomerRequest.csv" mode="APPEND">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</when>
+			<otherwise >
+				<file:write doc:name="Write to Common Customer File" doc:id="26328794-addc-4b7d-acbf-f6c68e3d2ec4" config-ref="File_Config" mode="APPEND" path="carData/CustomerRequest.csv">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</otherwise>
+		</choice>
+		<os:store doc:name="lastCustomerId" doc:id="6aefb40d-dee3-4814-89eb-129a992e5eeb" key="lastCustomerId">
+			<os:value ><![CDATA[#[vars.lastCustomerId as Number + 1]]]></os:value>
+		</os:store>
+		<ee:transform doc:name="Success Message" doc:id="5313aaa9-65a4-4b5c-a837-1046a710dc81" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  reply: "Congratulations! your car is booked. Have a safe journey!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="677e27a2-b4e7-4173-a83d-165468c49e3c" message='#["postCustomerCar Flow Finished"]'/>
+	</flow>
+	<flow name="postProviderCar" doc:id="7ef42d48-a3e7-4829-90d0-e7eb189a0f36" >
+		<logger level="INFO" doc:name="Init Logger" doc:id="53324d67-d014-4d43-a5f8-f73ceac5973b" message='#["postProviderCar Flow Started"]'/>
+		<set-variable value='#[payload.name default ""]' doc:name="providerVariable" doc:id="bdb5beb7-bd86-419a-8359-f6cbfc6ea8fc" variableName="provider" />
+		<os:retrieve doc:name="lastProviderId" doc:id="51ac93cf-532e-43bb-bae6-9c378f971148" key="lastProviderId" target="lastProviderId">
+			<os:default-value ><![CDATA[1]]></os:default-value>
+		</os:retrieve>
+		<ee:transform doc:name="Setting Provider Booking ID" doc:id="aa117bc6-b6f0-442b-9faa-c37fb4ac34a9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+type currency=String{format: '.00'}
+---
+{
+	"bookingId":vars.lastProviderId,
+	"name": payload.name,
+	"description": payload.description,
+	"source":payload.source,
+	"destination ":payload.destination,
+	"carType":payload.cartype,
+	"price":payload.price as Number as currency,
+	"status":payload.status
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Check Provider" doc:id="c31d382f-fc10-49a8-bd33-f9562b6d7fcc" >
+			<when expression='#[vars.provider=="OLA"]'>
+				<file:write doc:name="Write to Ola Master" doc:id="283ce6b4-3912-45a6-ba08-aadb1acf97c4" config-ref="File_Config" mode="APPEND" path="carData/OlaMaster.csv">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</when>
+			<when expression='#[vars.provider=="UBER"]'>
+				<file:write doc:name="Write to Uber Master" doc:id="5589ece9-130e-454b-a0ea-fb89c7b05377" config-ref="File_Config" mode="APPEND" path="carData/UberMaster.csv">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</when>
+			<otherwise>
+				<file:write doc:name="Write To Common" doc:id="197f9a5c-ff3e-4737-8c39-1be3c241d38e" config-ref="File_Config" mode="APPEND" path="carData/ProviderMaster.csv">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header=false
+---
+payload]]]></file:content>
+				</file:write>
+			</otherwise>
+		
+</choice>
+		<os:store doc:name="lastProviderId" doc:id="c4bf5630-6332-471d-ae6f-3f2d9ebbf159" key="lastProviderId">
+			<os:value ><![CDATA[#[vars.lastProviderId as Number + 1]]]></os:value>
+		</os:store>
+		<ee:transform doc:name="Success Message" doc:id="2868e1b1-90c1-4dd8-8e37-0997aa635e80" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  reply: "Congratulations! your car is registered for bookings!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="ba553707-f7ae-492d-a768-fd4d80671146" message='#["postProviderCar Flow Finished"]'/>
+	</flow>
+</mule>
